@@ -1,0 +1,70 @@
+openapi: 3.0.0
+info:
+  title: Product Service API
+  description: API for managing products in the store
+  version: 1.0.0
+
+paths:
+  /products/{id}:
+    get:
+      summary: Get product by ID
+      description: Returns a single product by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type:openapi: 3.0.0
+info:
+  title: Product Service API
+  description: API for managing products in the store
+  version: 1.0.0
+
+paths:
+  /products/{id}:
+    get:
+      summary: Get product by ID
+      description: Returns a single product by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  price:
+                    type: number
+        '400':
+          description: Missing product ID
+        '404':
+          description: Product not found
+ string
+                  price:
+                    type: number
+        '400':
+          description: Missing product ID
+        '404':
+          description: Product not found
