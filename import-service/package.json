@@ -15,18 +15,18 @@
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "latest",
     "@aws-sdk/client-s3": "latest",
+    "@aws-sdk/client-sns": "latest",
     "@aws-sdk/client-sqs": "latest",
     "@aws-sdk/s3-request-presigner": "latest",
-    "@aws-sdk/client-sns": "latest",
     "@types/jest": "^29.5.14",
     "@types/node": "22.7.9",
+    "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.25.1",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3"
   },
-
   "dependencies": {
     "@aws-sdk/client-sns": "^3.758.0",
     "@aws-sdk/client-sqs": "^3.758.0",
