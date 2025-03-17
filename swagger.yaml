@@ -1,0 +1,211 @@
+openapi: 3.0.0
+info:
+  title: AWS Backend API
+  description: API documentation for Product Service and Import Service
+  version: 1.0.0
+  contact:
+    email: support@example.com
+servers:
+  - url: https://api.example.com/dev
+    description: Development server
+  - url: https://api.example.com/prod
+    description: Production server
+
+tags:
+  - name: Products
+    description: Operations related to products
+  - name: Import
+    description: Operations related to importing product data
+
+paths:
+  /products:
+    get:
+      summary: Get all products
+      description: Returns a list of all available products
+      tags:
+        - Products
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new product
+      description: Creates a new product with the provided data
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{productId}:
+    get:
+      summary: Get product by ID
+      description: Returns a single product by its ID
+      tags:
+        - Products
+      parameters:
+        - name: productId
+          in: path
+          description: ID of the product to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid ID supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /import:
+    get:
+      summary: Get signed URL for file upload
+      description: Returns a pre-signed URL for uploading a CSV file to S3
+      tags:
+        - Import
+      parameters:
+        - name: name
+          in: query
+          description: Name of the file to upload
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Pre-signed URL for file upload
+        '400':
+          description: File name is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - price
+        - count
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the product
+          example: "1"
+        title:
+          type: string
+          description: Title of the product
+          example: "iPhone 13"
+        description:
+          type: string
+          description: Description of the product
+          example: "Najnowszy model iPhone z potężnym procesorem A15 Bionic"
+        price:
+          type: number
+          format: float
+          description: Price of the product
+          example: 3999
+        count:
+          type: integer
+          description: Available quantity of the product
+          example: 10
+
+    ProductInput:
+      type: object
+      required:
+        - title
+        - description
+        - price
+        - count
+      properties:
+        title:
+          type: string
+          description: Title of the product
+          example: "iPhone 13"
+        description:
+          type: string
+          description: Description of the product
+          example: "Najnowszy model iPhone z potężnym procesorem A15 Bionic"
+        price:
+          type: number
+          format: float
+          description: Price of the product
+          example: 3999
+        count:
+          type: integer
+          description: Available quantity of the product
+          example: 10
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Internal server error"
