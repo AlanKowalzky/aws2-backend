@@ -1,7 +1,7 @@
 import { S3Event } from 'aws-lambda';
 import { S3Client, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
-import * as csv from 'csv-parser';
+import csv from 'csv-parser';
 import { Readable } from 'stream';
 
 const BUCKET_NAME = process.env.BUCKET_NAME;
