@@ -9,8 +9,8 @@ import '@jest/globals';
 jest.mock('@aws-sdk/client-s3');
 jest.mock('@aws-sdk/client-sqs');
 
-describe('importFileParser lambda', () => {
-  // Mock S3 event
+describe('importFileParser lambda (fixed version)', () => {
+  // Mock S3 event with complete structure
   const mockS3Event: S3Event = {
     Records: [
       {
@@ -65,6 +65,10 @@ describe('importFileParser lambda', () => {
     }
   });
 
+  // Mock implementations
+  let s3ClientSendMock: jest.Mock;
+  let sqsClientSendMock: jest.Mock;
+
   beforeEach(() => {
     // Reset mocks before each test
     jest.resetAllMocks();
@@ -79,8 +83,8 @@ describe('importFileParser lambda', () => {
       Body: mockReadable
     };
     
-    // Setup S3Client mock
-    const s3ClientSendMock = jest.fn();
+    // Setup S3Client mock with proper return values
+    s3ClientSendMock = jest.fn();
     s3ClientSendMock.mockImplementation((command) => {
       if (command instanceof GetObjectCommand) {
         return Promise.resolve(mockGetObjectResponse);
@@ -94,8 +98,12 @@ describe('importFileParser lambda', () => {
       send: s3ClientSendMock
     }));
     
-    // Setup SQSClient mock
-    const sqsClientSendMock = jest.fn().mockResolvedValue({});
+    // Setup SQSClient mock with proper return value
+    sqsClientSendMock = jest.fn();
+    sqsClientSendMock.mockImplementation(() => {
+      return Promise.resolve({});
+    });
+    
     (SQSClient as jest.Mock).mockImplementation(() => ({
       send: sqsClientSendMock
     }));
@@ -117,19 +125,28 @@ describe('importFileParser lambda', () => {
     // Verify SQS operations - should be called for each CSV record
     expect(sqsClientInstance.send).toHaveBeenCalledTimes(mockCsvData.length);
     
-    // Verify the correct parameters for SQS SendMessageCommand
-    mockCsvData.forEach((data, index) => {
-      const sendMessageCall = sqsClientInstance.send.mock.calls.find(
-        (call: any) => {
-          if (call[0] instanceof SendMessageCommand && call[0].input.MessageBody) {
-            return JSON.parse(call[0].input.MessageBody).id === data.id;
+    // Verify the correct parameters for SQS SendMessageCommand with proper MessageBody check
+    const sendMessageCalls = sqsClientSendMock.mock.calls.filter(
+      (call) => call[0] instanceof SendMessageCommand
+    );
+    
+    expect(sendMessageCalls.length).toBe(mockCsvData.length);
+    
+    mockCsvData.forEach((data) => {
+      const matchingCall = sendMessageCalls.find(
+        (call) => {
+          const command = call[0];
+          if (command instanceof SendMessageCommand && command.input && command.input.MessageBody) {
+            const messageBody = JSON.parse(command.input.MessageBody);
+            return messageBody.id === data.id;
           }
           return false;
         }
       );
       
-      expect(sendMessageCall).toBeTruthy();
-      expect(sendMessageCall[0].input.QueueUrl).toBe(process.env.SQS_QUEUE_URL || '');
+      expect(matchingCall).toBeTruthy();
+      const command = matchingCall[0];
+      expect(command.input.QueueUrl).toBe(process.env.SQS_QUEUE_URL);
     });
   });
 
