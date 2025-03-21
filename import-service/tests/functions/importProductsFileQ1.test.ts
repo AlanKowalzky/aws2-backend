@@ -6,14 +6,25 @@ import { handler } from '../../src/functions/importProductsFile';
 
 
 // Mock the AWS SDK modules
-jest.mock('@aws-sdk/client-s3');
+jest.mock('@aws-sdk/client-s3', () => {
+  const originalModule = jest.requireActual('@aws-sdk/client-s3');
+  return {
+    ...originalModule,
+    S3Client: jest.fn(),
+    PutObjectCommand: jest.fn().mockImplementation((params) => {
+      return {
+        input: params
+      };
+    })
+  };
+});
 jest.mock('@aws-sdk/s3-request-presigner');
 
 describe('importProductsFile handler', () => {
   const mockSignedUrl = 'https://mock-signed-url.com';
   
   beforeEach(() => {
-    // process.env.BUCKET_NAME = 'XXXXXXXXXXX';
+    // Make sure environment variables are set before each test
     process.env.BUCKET_NAME = 'buckettask5aws';
     process.env.BUCKET_REGION = 'us-east-1';
     (getSignedUrl as jest.Mock).mockResolvedValue(mockSignedUrl);
@@ -198,11 +209,10 @@ describe('importProductsFile handler', () => {
     await handler(event);
 
     // Assert
-    const mockPutObjectCommand = jest.mocked(PutObjectCommand);
-    const putObjectCommandCalls = mockPutObjectCommand.mock.calls[0][0];
-    expect(putObjectCommandCalls).toEqual({
+    // Get the PutObjectCommand instance that was passed to getSignedUrl
+    const putObjectCommand = (PutObjectCommand as jest.Mock).mock.calls[0][0];
+    expect(putObjectCommand).toEqual({
       Bucket: 'buckettask5aws',
-      // process.env.BUCKET_NAME = 'buckettask5aws';
       Key: `uploaded/${fileName}`,
       ContentType: 'text/csv'
     });

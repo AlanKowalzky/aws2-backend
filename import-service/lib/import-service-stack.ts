@@ -1,5 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+// import type { StackProps } from 'aws-cdk-lib';
+import type { StackProps as CdkStackProps } from 'aws-cdk-lib';
+
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -9,7 +12,9 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as path from 'path';
 
 export class ImportServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  // constructor(scope: Construct, id: string, props?: StackProps) {
+      constructor(scope: Construct, id: string, props?: StackProps) {
+
     super(scope, id, props);
     
     // Get reference to the SQS queue from Product Service
@@ -81,10 +86,24 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    // Import the basicAuthorizer Lambda function from the Authorization Service
+    const basicAuthorizerArn = cdk.Fn.importValue('BasicAuthorizerLambdaArn');
+    const basicAuthorizer = lambda.Function.fromFunctionArn(
+      this,
+      'BasicAuthorizerFunction',
+      basicAuthorizerArn
+    );
+
+    // Create a Lambda authorizer for the API Gateway
+    const authorizer = new apigateway.TokenAuthorizer(this, 'BasicAuthorizer', {
+      handler: basicAuthorizer,
+      identitySource: 'method.request.header.Authorization',
+    });
+
     // Create resources and methods
     const importResource = api.root.addResource('import');
     
-    // Add request parameter for fileName
+    // Add request parameter for fileName with authorizer
     const importMethod = importResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(importProductsFileLambda),
@@ -92,6 +111,7 @@ export class ImportServiceStack extends cdk.Stack {
         requestParameters: {
           'method.request.querystring.name': true,
         },
+        authorizer: authorizer,
       }
     );
 

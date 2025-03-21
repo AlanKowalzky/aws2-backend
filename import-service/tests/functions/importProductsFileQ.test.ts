@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { handler } from './importProductsFile';
+import { handler } from '../../src/functions/importProductsFile';
 
 // Mock the AWS SDK modules
 jest.mock('@aws-sdk/client-s3');

@@ -78,12 +78,12 @@ describe('importFileParser lambda (fixed version)', () => {
     process.env.BUCKET_REGION = 'us-east-1';
     process.env.SQS_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/123456789012/test-queue';
     
-    // Mock S3 GetObjectCommand response
+    // Mock S3 GetObjectCommand response with proper Body property
     const mockGetObjectResponse = {
       Body: mockReadable
     };
     
-    // Setup S3Client mock with proper return values
+    // Setup S3Client mock with proper implementation
     s3ClientSendMock = jest.fn();
     s3ClientSendMock.mockImplementation((command) => {
       if (command instanceof GetObjectCommand) {
@@ -94,20 +94,21 @@ describe('importFileParser lambda (fixed version)', () => {
       return Promise.resolve({}); // Default return value
     });
     
-    (S3Client as jest.Mock).mockImplementation(() => ({
+    // Create a mock S3Client instance with the send method
+    const mockS3ClientInstance = {
       send: s3ClientSendMock
-    }));
+    };
     
-    // Setup SQSClient mock with proper return value
-    sqsClientSendMock = jest.fn();
-    sqsClientSendMock.mockImplementation(() => {
-      return Promise.resolve({});
-    });
+    // Mock the S3Client constructor to return our mock instance
+    (S3Client as jest.Mock).mockImplementation(() => mockS3ClientInstance);
     
+    // Setup SQSClient mock with proper implementation
+    sqsClientSendMock = jest.fn().mockResolvedValue({});
     (SQSClient as jest.Mock).mockImplementation(() => ({
       send: sqsClientSendMock
     }));
   });
+  
 
   it('should process CSV file and send records to SQS', async () => {
     // Call the handler
