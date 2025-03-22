@@ -1,8 +1,12 @@
 import { APIGatewayTokenAuthorizerEvent, APIGatewayAuthorizerResult } from 'aws-lambda';
 import { config } from 'dotenv';
+import * as path from 'path';
 
-// Load environment variables from .env file
-config();
+// Load environment variables from .env file in the main directory
+config({ path: path.resolve(__dirname, '../../.env') });
+
+// Log loaded environment variables for debugging (excluding sensitive values)
+console.log('Environment variables loaded:', Object.keys(process.env).filter(key => !key.includes('AWS') && !key.includes('NODE')));
 
 export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> => {
   console.log('Authorization event:', JSON.stringify(event));

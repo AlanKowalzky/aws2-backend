@@ -1,8 +1,7 @@
+
+import { Stack, StackProps } from 'aws-cdk-lib';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-// import type { StackProps } from 'aws-cdk-lib';
-import type { StackProps as CdkStackProps } from 'aws-cdk-lib';
-
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -11,9 +10,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as path from 'path';
 
-export class ImportServiceStack extends cdk.Stack {
-  // constructor(scope: Construct, id: string, props?: StackProps) {
-      constructor(scope: Construct, id: string, props?: StackProps) {
+export class ImportServiceStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
 
     super(scope, id, props);
     

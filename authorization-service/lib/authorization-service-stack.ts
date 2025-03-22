@@ -14,7 +14,7 @@ export class AuthorizationServiceStack extends cdk.Stack {
     this.basicAuthorizerLambda = new lambda.Function(this, 'BasicAuthorizerFunction', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'basicAuthorizer.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../dist/functions')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../dist/src/functions')),
     });
 
     // Export the Lambda ARN for cross-stack references
