@@ -101,17 +101,64 @@ export class ImportServiceStack extends Stack {
     // Create resources and methods
     const importResource = api.root.addResource('import');
     
-    // Add request parameter for fileName with authorizer
-    const importMethod = importResource.addMethod(
+    // Add GET method with request parameter for fileName with authorizer
+    const importGetMethod = importResource.addMethod(
       'GET',
-      new apigateway.LambdaIntegration(importProductsFileLambda),
+      new apigateway.LambdaIntegration(importProductsFileLambda, {
+        proxy: true,
+      }),
       {
         requestParameters: {
           'method.request.querystring.name': true,
         },
         authorizer: authorizer,
+        methodResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': true,
+            },
+          },
+        ],
       }
     );
+    
+    // Add POST method for file upload with authorizer
+    const importPostMethod = importResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(importProductsFileLambda, {
+        proxy: true,
+        integrationResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': "'*'",
+            },
+          },
+        ],
+      }),
+      {
+        authorizer: authorizer,
+        methodResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': true,
+            },
+          },
+        ],
+      }
+    );
+    
+    // Add Lambda permission for POST method
+    new lambda.CfnPermission(this, 'ImportPostMethodLambdaPermission', {
+      action: 'lambda:InvokeFunction',
+      functionName: importProductsFileLambda.functionName,
+      principal: 'apigateway.amazonaws.com',
+      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${api.restApiId}/*/${importPostMethod.httpMethod}${importResource.path}`,
+    });
+    
+    // Note: OPTIONS method is already defined by defaultCorsPreflightOptions in the RestApi constructor
 
     // Add IAM policy to allow Lambda to generate presigned URLs
     const s3Policy = new iam.PolicyStatement({
