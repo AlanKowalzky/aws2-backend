@@ -1,0 +1,7 @@
+buckettask5aws
+cdk-hnb659fds-assets-124355679154-us-east-1
+import-service-bucket-124355679154-us-east-1
+importservicestack-importbucketbaf3a8e9-u6wtwdu8gjby
+mycdkappstack-reactappbuckete340e270-z2zqbhexvhp0
+react-app-124355679154-us-east-1
+shop-for-all

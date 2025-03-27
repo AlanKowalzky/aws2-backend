@@ -1,3 +1,5 @@
+
+import { Stack, StackProps } from 'aws-cdk-lib';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -8,8 +10,9 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as path from 'path';
 
-export class ImportServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+export class ImportServiceStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+
     super(scope, id, props);
     
     // Get reference to the SQS queue from Product Service
@@ -81,19 +84,81 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    // Import the basicAuthorizer Lambda function from the Authorization Service
+    const basicAuthorizerArn = cdk.Fn.importValue('BasicAuthorizerLambdaArn');
+    const basicAuthorizer = lambda.Function.fromFunctionArn(
+      this,
+      'BasicAuthorizerFunction',
+      basicAuthorizerArn
+    );
+
+    // Create a Lambda authorizer for the API Gateway
+    const authorizer = new apigateway.TokenAuthorizer(this, 'BasicAuthorizer', {
+      handler: basicAuthorizer,
+      identitySource: 'method.request.header.Authorization',
+    });
+
     // Create resources and methods
     const importResource = api.root.addResource('import');
     
-    // Add request parameter for fileName
-    const importMethod = importResource.addMethod(
+    // Add GET method with request parameter for fileName with authorizer
+    const importGetMethod = importResource.addMethod(
       'GET',
-      new apigateway.LambdaIntegration(importProductsFileLambda),
+      new apigateway.LambdaIntegration(importProductsFileLambda, {
+        proxy: true,
+      }),
       {
         requestParameters: {
           'method.request.querystring.name': true,
         },
+        authorizer: authorizer,
+        methodResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': true,
+            },
+          },
+        ],
       }
     );
+    
+    // Add POST method for file upload with authorizer
+    const importPostMethod = importResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(importProductsFileLambda, {
+        proxy: true,
+        integrationResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': "'*'",
+            },
+          },
+        ],
+      }),
+      {
+        authorizer: authorizer,
+        methodResponses: [
+          {
+            statusCode: '200',
+            responseParameters: {
+              'method.response.header.Access-Control-Allow-Origin': true,
+            },
+          },
+        ],
+      }
+    );
+    
+    // Add Lambda permission for POST method
+    new lambda.CfnPermission(this, 'ImportPostMethodLambdaPermission', {
+      action: 'lambda:InvokeFunction',
+      functionName: importProductsFileLambda.functionName,
+      principal: 'apigateway.amazonaws.com',
+      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${api.restApiId}/*/${importPostMethod.httpMethod}${importResource.path}`,
+    });
+    
+    // Note: OPTIONS method is already defined by defaultCorsPreflightOptions in the RestApi constructor
 
     // Add IAM policy to allow Lambda to generate presigned URLs
     const s3Policy = new iam.PolicyStatement({
