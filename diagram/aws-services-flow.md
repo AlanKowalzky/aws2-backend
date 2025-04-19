@@ -1,6 +1,6 @@
-# AWS Services Flow Diagram
+%% # AWS Services Flow Diagram
 
-```mermaid
+%% ```mermaid
 flowchart TD
     subgraph "AWS Cloud"
         S3["S3 Bucket"] --> |CSV Files| ImportService["Import Service"]
@@ -21,16 +21,16 @@ flowchart TD
     
     User["User"] --> |Upload CSV| S3
     User --> |API Requests| ProductService
-```
+%% ```
 
-## Flow Description
+%% ## Flow Description
 
-1. User uploads CSV files with product data to S3 bucket
-2. Import Service processes the CSV files
-3. Parsed product data is sent to SQS queue
-4. Product Service is triggered by SQS events
-5. Product Service creates new products in DynamoDB (Products and Stocks tables)
-6. Product Service publishes notifications to SNS topic
-7. Subscribers receive notifications about new products
+%% 1. User uploads CSV files with product data to S3 bucket
+%% 2. Import Service processes the CSV files
+%% 3. Parsed product data is sent to SQS queue
+%% 4. Product Service is triggered by SQS events
+%% 5. Product Service creates new products in DynamoDB (Products and Stocks tables)
+%% 6. Product Service publishes notifications to SNS topic
+%% 7. Subscribers receive notifications about new products
 
-This diagram represents the serverless architecture implemented in this project, showing the integration between various AWS services for product data processing.
+%% This diagram represents the serverless architecture implemented in this project, showing the integration between various AWS services for product data processing.

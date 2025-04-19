@@ -46,7 +46,7 @@ export const handler = async (event: S3Event): Promise<void> => {
         
         stream
           .pipe(csv())
-          .on('data', async (data) => {
+          .on('data', async (data: Record<string, any>) => {
             console.log('Parsed CSV record:', JSON.stringify(data));
             
             // Send record to SQS queue
@@ -60,7 +60,7 @@ export const handler = async (event: S3Event): Promise<void> => {
               console.error('Error sending message to SQS:', sqsError);
             }
           })
-          .on('error', (error) => {
+          .on('error', (error: Error) => {
             console.error('Error parsing CSV:', error);
             reject(error);
           })

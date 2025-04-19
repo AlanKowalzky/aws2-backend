@@ -1,0 +1,24 @@
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+# Dependency directories
+node_modules/
+
+# TypeScript compiled files
+dist/
+
+# Environment variables
+*/.env
+
+# Jest coverage
+coverage/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS specific files
+.DS_Store
+Thumbs.db
